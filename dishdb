@@ -1,0 +1,53 @@
+{
+    "_id": {
+        "$oid": "5cc32e4784bb068833d0c4fb"
+    },
+    "updatedAt": {
+        "$date": "2019-04-26T16:35:13.501Z"
+    },
+    "createdAt": {
+        "$date": "2019-04-26T16:13:59.540Z"
+    },
+    "name": "Uthappizza",
+    "image": "images/uthappizza.png",
+    "category": "mains",
+    "price": 499,
+    "description": "A unique combination of Indian Uthappam (pancake) and Italian pizza, topped with Cerignola olives, ripe vine cherry tomatoes, Vidalia onion, Guntur chillies and Buffalo Paneer.",
+    "comments": [
+        {
+            "updatedAt": {
+                "$date": "2019-04-26T16:29:43.596Z"
+            },
+            "createdAt": {
+                "$date": "2019-04-26T16:29:43.596Z"
+            },
+            "rating": 5,
+            "comment": "Ths is very good",
+            "author": {
+                "$oid": "5cc30e3b05bec500834e83d1"
+            },
+            "_id": {
+                "$oid": "5cc331f73b5a560990b06d28"
+            }
+        },
+        {
+            "updatedAt": {
+                "$date": "2019-04-26T16:35:13.500Z"
+            },
+            "createdAt": {
+                "$date": "2019-04-26T16:35:13.500Z"
+            },
+            "rating": 5,
+            "comment": "Ths is very good",
+            "author": {
+                "$oid": "5cc32cd284bb068833d0c4fa"
+            },
+            "_id": {
+                "$oid": "5cc333413b5a560990b06d29"
+            }
+        }
+    ],
+    "featured": true,
+    "label": "Hot",
+    "__v": 2
+}
