@@ -11,7 +11,7 @@ var https = require('https');
 var fs = require('fs');
 
 /**
- * Get port from environment and store in Express.
+ * Get port from environment and store in Exprexess.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
@@ -40,9 +40,42 @@ var secureServer = https.createServer(options, app);
 
 secureServer.listen(app.get('secPort'), () => {
   console.log('Secure Server listening on port ',  app.get('secPort'));
-
 });
 
+//const io = require('socket.io').listen(secureServer, { origins: '*:*'});
+/* io.on('connection', (socket) => {  
+  //socket.emit('message', { hello: 'world' });
+  socket.on('chat message', function(msg){
+    console.log(msg);
+    io.emit(msg[0], [msg[1], msg[0], "response"]);
+});
+}); */
+//const io = require('socket.io')(secureServer, { origins: '*:*'});
+global.io = require('socket.io')(secureServer, { origins: '*:*'});
+var chat = io
+  .of('/chat')
+  .on('connection', function (socket) {    
+    socket.on('message', function(msg){
+      console.log(msg);
+      chat.emit(msg[0], [msg[1], msg[0], "response"]);
+    });
+    socket.emit('message', {
+        that: 'only'
+      , '/chat': 'will get'
+    });
+    chat.emit('message', {
+        everyone: 'in'
+      , '/chat': 'will get'
+    });
+  });
+
+/* var chat = io.on('connection', (socket) => {    
+  socket.on('chat messagexport const io = require('socket.io')(secureServer, { origins: '*:*'});ioe', function(msg){
+    console.log(msg);
+    io.emit(msg[0], [msg[1], msg[0], "response"]);
+});
+}); */
+app.set('socketio', io);
 secureServer.on('error', onError);
 secureServer.on('listening', onListening);
 /**
@@ -102,5 +135,5 @@ function onListening() {
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  debug('Listening on ' + bind);  
 }

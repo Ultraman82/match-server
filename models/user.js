@@ -51,7 +51,23 @@ var User = new Schema({
     profile : {
       type: String,
       default: null
-    }
+    },
+    chatRooms: {
+      type: Object,
+      default: null
+    },
+    isLogged: {
+      type: Boolean,
+      default: false
+    },
+    like : {
+      type: Array,
+      default: []
+    },
+    likedby : {
+      type: Array,
+      default: []
+    },
 });
 
 User.plugin(passportLocalMongoose)

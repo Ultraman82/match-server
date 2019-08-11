@@ -15,9 +15,10 @@ var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
 var uploadRouter = require('./routes/uploadRouter');
-
+var messageRouter = require('./routes/messageRouter');
 const mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
+
 
 //const Dishes = require('./models/dishes');
 
@@ -34,14 +35,18 @@ connect.then((db) => {
 
 var app = express();
 
+//server.listen(5000);
+
 app.all('*', (req, res, next) => {
-  if (req.secure) {
+  if (req.secure) { 
     return next();
   }
   else {
     res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
   }  
 });
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -59,6 +64,7 @@ app.use('/dishes',dishRouter);
 app.use('/promotions',promoRouter);
 app.use('/leaders',leaderRouter);
 app.use('/image',uploadRouter);
+app.use('/message',messageRouter);
 /* app.use(cookieParser('12345-67890-09876-54321')); */
 
 /* app.use(session({
@@ -98,6 +104,8 @@ app.use(function(req, res, next) {
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
+  var io = req.app.get('socketio');
+  io.emit("test1", 'hi!');
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
