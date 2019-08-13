@@ -68,6 +68,19 @@ router.get('/', cors.corsWithOptions, (req,res,next) => {
   .catch((err) => next(err));
 });
 
+router.post('/lusers', cors.corsWithOptions, (req,res,next) => { 
+  //var obj_ids = req.body.users.split(',').map(function(id) { return ObjectId(id); });
+  //console.log(req.body);  
+  User.find({username: {$in: req.body.users}})  
+  .then((users) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json(users);
+  }, (err) => next(err))
+  .catch((err) => next(err));
+});
+
+
 router.post('/signup', cors.corsWithOptions, (req, res, next) => {
 //router.post('/signup', (req, res, next) => {
   User.register(new User({username: req.body.username}), 
@@ -156,21 +169,38 @@ router.post('/chatroom', (req, res, next) => {
 .catch((err) => next(err));
 })     
 
-router.post('/add/:field', (req, res, next) => {  
-  console.log("req.params: " + req.params);
+router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {  
+  //console.log("req.params: " + req.params);
   const str = `${req.params.field}`;
-  User.findOne({username: req.body.user1})  
+  User.findOne({username: req.body.user})  
   .then(user => {
-    user[str] = user[str].concat(req.body.user2);
-    user.save();
+    user[str] = user[str].concat(req.body.data); 
+    user.save((err, user) => {
+      if (err) {          
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');          
+        res.json({err: err});
+        return ;
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json(user[str]);      
   })
+  })  
+  .catch((err) => next(err));
+})     
+
+router.get('/:username/:field', cors.corsWithOptions, (req, res, next) => {  
+  //console.log("req.params: " + req.params);
+  const str = `${req.params.field}`;
+  User.findOne({username: req.params.username})    
   .then((user) => {    
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
-    res.json(user);
+    res.json(user[str]);
 }, (err) => next(err))
 .catch((err) => next(err));
-})     
+})    
 
 router.post('/login', cors.corsWithOptions, (req, res, next) => {    
   passport.authenticate('local', (err, user, info) => {
