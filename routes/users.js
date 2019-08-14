@@ -170,8 +170,11 @@ router.post('/chatroom', (req, res, next) => {
 })     
 
 router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {  
-  //console.log("req.params: " + req.params);
-  const str = `${req.params.field}`;
+  //console.log("req.params: " + req.params);  
+  let noti = io.of('noti');
+  noti.emit(req.body.user, `${req.body.data} like you`);
+  console.log(req.body.user + `\n${req.body.data} like you`);
+  const str = req.params.field;  
   User.findOne({username: req.body.user})  
   .then(user => {
     user[str] = user[str].concat(req.body.data); 

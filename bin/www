@@ -69,6 +69,15 @@ var chat = io
     });
   });
 
+var noti = io
+  .of('/noti')
+  .on('connection', function (socket) {    
+    /* socket.on('message', function(msg){
+      console.log(msg);
+      chat.emit(msg[0], [msg[1], msg[0], "response"]);
+    });     */
+  });
+
 /* var chat = io.on('connection', (socket) => {    
   socket.on('chat messagexport const io = require('socket.io')(secureServer, { origins: '*:*'});ioe', function(msg){
     console.log(msg);
