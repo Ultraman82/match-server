@@ -5,7 +5,6 @@ const Schema = mongoose.Schema;
 var notificationSchema = new Schema({
     username: {
         type: String,
-        required: true,
         unique: true
     },
     unread: {

@@ -9,6 +9,7 @@ var router = express.Router();
 router.use(bodyParser.json());
 const cors = require('./cors');
 var nodemailer = require('nodemailer');
+const Messages = require('../models/messages');
 const path = require('path');
 require('dotenv').config()
 //const io = require('socket.io')(router, { origins: '*:*'});
@@ -93,9 +94,9 @@ router.post('/signup', cors.corsWithOptions, (req, res, next) => {
       res.json({err: err});
     }
     else {
-      let newNoti = new Noti({username: req.body.username});
-      //user.noti.id = newNoti._id;
-      user.noti.unread = false;
+      let newNoti=new Noti({username: req.body.username});
+      console.log("noti_id: " + newNoti._id);
+      user.noti = newNoti._id;
       newNoti.save();
       if (req.body.firstname)
         user.firstname = req.body.firstname;
@@ -177,13 +178,50 @@ router.post('/chatroom', (req, res, next) => {
 
 router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {  
   //console.log("req.params: " + req.params);  
+  let user1 = req.body.user;
+  let user2 = req.body.data;
+
   let noti = io.of('noti');
-  noti.emit(req.body.user, `${req.body.data} like you`);
-  console.log(req.body.user + `\n${req.body.data} like you`);
-  const str = req.params.field;  
-  User.findOne({username: req.body.user})  
+  noti.emit(user2, `${user1} like you`);
+  console.log(user2 + `\n${user1} like you`);
+  const str = req.params.field;
+  if(req.body.connected){
+    //notify connected
+    noti.emit(user2, `${user1} connected`);
+    noti.emit(user1, `${user2} connected`);
+    //create chat room
+    let room = new Messages({users=[user1, user2]});
+
+
+    //save chatroom id in each users`    
+  }
+  User.findOne({username: user2})  
   .then(user => {
-    user[str] = user[str].concat(req.body.data); 
+    user[str] = user[str].concat(user1); 
+    user.save((err, user) => {
+      if (err) {          
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');          
+        res.json({err: err});
+        return ;
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json(user[str]);      
+  })
+  })  
+  .catch((err) => next(err));
+})     
+
+router.post('/addback', cors.corsWithOptions, (req, res, next) => {  
+  //console.log("req.params: " + req.params);  
+  let noti = io.of('noti');
+  noti.emit(req.body.data, `${req.body.user} like you`);
+  console.log(req.body.data + `\n${req.body.user} like you`);
+  const str = req.params.field;  
+  User.findOne({username: req.body.data})  
+  .then(user => {
+    user[str] = user[str].concat(req.body.user); 
     user.save((err, user) => {
       if (err) {          
         res.statusCode = 500;

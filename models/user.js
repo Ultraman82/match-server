@@ -2,6 +2,22 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 
+var notificationSchema = new Schema({
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+    //usePushEach : true
+  },
+  unread: {
+      type: Boolean,
+      required: false
+  },        
+  comments:{
+      type: Array,
+      default: []
+  }
+});
+/* var Noti = mongoose.model('Noti', notificationSchema); */
 
 var User = new Schema({
     firstname: {
@@ -31,8 +47,7 @@ var User = new Schema({
     verified:   {
       type: Boolean,
       default: false
-  },
-  
+  },  
     tags:{
       type: Array,
       default: []
@@ -58,11 +73,9 @@ var User = new Schema({
       default: null
     },
     noti: {
-      type: Object,
-      default: {
-        id:null,
-        unread:false
-      }},
+      type: String,
+      default: null
+    },
     isLogged: {
       type: Boolean,
       default: false
