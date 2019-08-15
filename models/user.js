@@ -32,6 +32,7 @@ var User = new Schema({
       type: Boolean,
       default: false
   },
+  
     tags:{
       type: Array,
       default: []
@@ -52,10 +53,16 @@ var User = new Schema({
       type: String,
       default: null
     },
-    chatRooms: {
+    chatrooms: {
       type: Object,
       default: null
     },
+    noti: {
+      type: Object,
+      default: {
+        id:null,
+        unread:false
+      }},
     isLogged: {
       type: Boolean,
       default: false

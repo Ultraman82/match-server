@@ -2,6 +2,7 @@ var express = require('express');
 const bodyParser = require('body-parser');
 var router = express.Router();
 var User = require('../models/user');
+var Noti = require('../models/noti');
 var passport = require('passport');
 var authenticate = require('../authenticate');
 var router = express.Router();
@@ -9,14 +10,15 @@ router.use(bodyParser.json());
 const cors = require('./cors');
 var nodemailer = require('nodemailer');
 const path = require('path');
+require('dotenv').config()
 //const io = require('socket.io')(router, { origins: '*:*'});
 
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'exelcior99@gmail.com',
-    pass: 'bau0099@'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });   
 
@@ -91,6 +93,10 @@ router.post('/signup', cors.corsWithOptions, (req, res, next) => {
       res.json({err: err});
     }
     else {
+      let newNoti = new Noti({username: req.body.username});
+      //user.noti.id = newNoti._id;
+      user.noti.unread = false;
+      newNoti.save();
       if (req.body.firstname)
         user.firstname = req.body.firstname;
       if (req.body.lastname)
