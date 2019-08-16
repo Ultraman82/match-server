@@ -38,7 +38,6 @@ verifyMail = (email) => {
     }
   }); 
 }
-
 /* var chat = io
   .of('/chat')
   .on('connection', function (socket) {    
@@ -176,9 +175,31 @@ router.post('/chatroom', (req, res, next) => {
 .catch((err) => next(err));
 })     
 
+const matchMake = (user1, user2) => {
+  User.findOneAndUpdate({username:user1}, { $push: {chatrooms : {[user2]: "5d56a1bcddeab3d2d71fb51d"}}}, {new:true})
+  .then(user => {console.log(user.chatrooms)});
+  User.findOneAndUpdate({username:user2}, { $push: {chatrooms : {[user1]: "5d56a1bcddeab3d2d71fb51d"}}}, {new:true})
+  .then(user => {console.log(user.chatrooms)});
+
+  /* Messages.create({users:[user1, user2]})
+  .then(chatRoom => {
+      User.findOneAndUpdate({username:user1}, { $push: {chatrooms : {[user2]: "5d56a1bcddeab3d2d71fb51d"}}}, {new:true});          
+      User.findOneAndUpdate({username:user2}, { $push: {chatrooms : {[user1]: chatRoom.id}}}, {new:true});          
+      User.findOne({username:user2})
+      .then(user => {                
+          user.chatrooms = user.chatrooms.concat({[user1]: chatRoom.id});        
+          console.log("user1 :" + user.chatrooms[0][user1]);
+          user.save();
+      })
+  }) */
+}
+
 router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {  
   //console.log("req.params: " + req.params);  
+  
+  //like
   let user1 = req.body.user;
+  //to be liked
   let user2 = req.body.data;
 
   let noti = io.of('noti');
@@ -187,14 +208,17 @@ router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {
   const str = req.params.field;
   if(req.body.connected){
     //notify connected
-    noti.emit(user2, `${user1} connected`);
-    noti.emit(user1, `${user2} connected`);
-    //create chat room
-    let room = new Messages({users=[user1, user2]});
-
-
-    //save chatroom id in each users`    
+    /* noti.emit(user2, `${user1} connected`);
+    noti.emit(user1, `${user2} connected`); */
+    //create chat room        
+    matchMake(user1, user2);
   }
+    /* let USER1 = User.findOne({username: user1});   
+    let str = `chatrooms.${user2}`;
+    USER1[str] = room._id; 
+    USER1.save();     */
+    //save chatroom id in each users`    
+  
   User.findOne({username: user2})  
   .then(user => {
     user[str] = user[str].concat(user1); 
@@ -205,6 +229,10 @@ router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {
         res.json({err: err});
         return ;
       }
+      /* if(req.body.connected){
+        
+
+      } */
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.json(user[str]);      

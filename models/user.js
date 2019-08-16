@@ -69,8 +69,8 @@ var User = new Schema({
       default: null
     },
     chatrooms: {
-      type: Object,
-      default: null
+      type: Array,
+      default: []
     },
     noti: {
       type: String,
