@@ -9,16 +9,6 @@ const messageRouter = express.Router();
 
 messageRouter.use(bodyParser.json());
 
-const matchMake = (user1, user2) => {
-    Messages.create({users:[user1, user2]})
-    .then(chatRoom => {
-        Users.findOne({username:user1})
-        .then(user => {
-            user.chatRoom.user2 = chatRoom;
-            user.save();
-        })
-    })
-}
 messageRouter.route('/')
 .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
@@ -56,29 +46,6 @@ messageRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));    
 });
-
-messageRouter.route('/matchmade')
-.options(cors.corsWithOptions, (req, res) => {
-    res.sendStatus(200);
-})
-.post((req, res, next) => {        
-    let user = req.body.users.split(',');    
-    console.log(user);
-    //Messages.create({users:[req.body.user1, req.body.user2]})
-    req.body.users = user;
-    Messages.create(req.body)
-    /* .then(room => {
-        console.log("room.id: " + room.id);
-        const str = `chatRooms.${user[1]}`;
-        User.findOneAndUpdate({username: user[0]}, { $set: { [str] : room.id, gender:"gay"  } }, {new:true}) */
-        .then((room) => {    
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.json(room);
-        }, (err) => next(err))
-        .catch((err) => next(err));
-        
-    });
 
 
 messageRouter.route('/:messageId')
@@ -125,8 +92,7 @@ messageRouter.route('/:messageId/comments')
     res.sendStatus(200);
 })
 .get(cors.cors, (req,res,next) => {
-    Messages.findById(req.params.messageId)
-    .populate('comments.author')
+    Messages.findById(req.params.messageId)    
     .then((message) => {
         if (message != null) {
             res.statusCode = 200;
@@ -149,20 +115,17 @@ messageRouter.route('/:messageId/comments')
             //req.body.author = req.username;
             //message.comments.push(req.body);
             req.body.time = new Date();
-            message.comments = message.comments.concat([req.body])
+            message.comments = message.comments.concat([req.body]);
+            message.unread = message.users[req.body.author];
             message.save()
-            .then((message) => {
-                Messages.findById(message._id)
-                .populate('comments.author')
-                .then((message) => {
+            .then((message) => {   
                     res.statusCode = 200;
                     res.setHeader('Content-Type', 'application/json');
-                    res.json(message);
-                })            
+                    res.json(message);             
             }, (err) => next(err));
         }
         else {
-            err = new Error('Dish ' + req.params.messageId + ' not found');
+            err = new Error('Message ' + req.params.messageId + ' not found');
             err.status = 404;
             return next(err);
         }

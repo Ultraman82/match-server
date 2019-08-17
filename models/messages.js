@@ -3,18 +3,22 @@ const Schema = mongoose.Schema;
 
 var messageSchema = new Schema({
     users: {
-        type: Array,
-        required: true,
+        type: Object,
+        required: true
         //unique: true
     },
+    image: {
+        type: Object, 
+        default: {},
+    },
     unread: {
-        type: Boolean,
-        required: false
+        type: String,
+        default: ""
     },        
     comments:{
         type: Array,
         default: []
-    }
+    }    
 });
 var Messages = mongoose.model('Message', messageSchema);
 

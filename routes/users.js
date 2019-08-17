@@ -59,8 +59,8 @@ verifyMail = (email) => {
 router.options('*', cors.corsWithOptions, (req, res) => { res.sendStatus(200); });
 //router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req,res,next) => {
 router.get('/', cors.corsWithOptions, (req,res,next) => {
-  var chat = io.of('/chat');      
-  chat.emit("test1", "test from log in");
+  /* var chat = io.of('/chat');      
+  chat.emit("test1", "test from log in"); */
   User.find({})  
   .then((users) => {
       res.statusCode = 200;
@@ -168,7 +168,7 @@ router.post('/chatroom', (req, res, next) => {
   const str = `chatRooms.${req.body.user2}`;
   User.findOneAndUpdate({username: req.body.user1}, { $set: { [str] : req.body.room  } }, {new:true})  
   .then((user) => {    
-    res.statusCode = 200;
+    res.statusCode = 200;4
     res.setHeader('Content-Type', 'application/json');
     res.json(user);
 }, (err) => next(err))
@@ -176,49 +176,52 @@ router.post('/chatroom', (req, res, next) => {
 })     
 
 const matchMake = (user1, user2) => {
-  User.findOneAndUpdate({username:user1}, { $push: {chatrooms : {[user2]: "5d56a1bcddeab3d2d71fb51d"}}}, {new:true})
-  .then(user => {console.log(user.chatrooms)});
-  User.findOneAndUpdate({username:user2}, { $push: {chatrooms : {[user1]: "5d56a1bcddeab3d2d71fb51d"}}}, {new:true})
-  .then(user => {console.log(user.chatrooms)});
-
-  /* Messages.create({users:[user1, user2]})
+  let newMessage = new Messages({users:{[user1]:user2, [user2]:user1}});  
+  User.findOneAndUpdate({username:user1}, { $push: {comments : {[user2]: newMessage.id}}}, {new:true})
+  .then(user => {        
+    //newMessage.update({$set:{ image: {[user1]:user.profile}}});      
+    newMessage.image[user1] = user.profile;            
+    //newMessage.save(); 
+    })  
+  User.findOneAndUpdate({username:user2}, { $push: {comments : {[user1]: newMessage.id}}}, {new:true})
+  .then(user => {   
+      newMessage.image[user2] = user.profile;        
+      newMessage.save(); 
+      console.log("newMessage.image : " + JSON.stringify(newMessage.image));  
+    });    
+  //console.log("newMessage.image : " + JSON.stringify(newMessage.image));  
+   /* Messages.create({users:{[user1]:user2, [user2]:user1}})
   .then(chatRoom => {
-      User.findOneAndUpdate({username:user1}, { $push: {chatrooms : {[user2]: "5d56a1bcddeab3d2d71fb51d"}}}, {new:true});          
-      User.findOneAndUpdate({username:user2}, { $push: {chatrooms : {[user1]: chatRoom.id}}}, {new:true});          
-      User.findOne({username:user2})
-      .then(user => {                
-          user.chatrooms = user.chatrooms.concat({[user1]: chatRoom.id});        
-          console.log("user1 :" + user.chatrooms[0][user1]);
-          user.save();
-      })
-  }) */
+    User.findOneAndUpdate({username:user1}, { $push: {chatrooms : {[user2]: chatRoom.id}}}, {new:true})
+    .then(user => {        
+      console.log("chatRoom" + chatRoom);
+        chatRoom.image[user1] = user.profile;        
+        chatRoom.image[user1] = "a";
+        console.log("image in the user: " + JSON.stringify(chatRoom.image));
+        chatRoom.save();
+        chatRoom.update({$set:{ image: {[user1]:user.profile}}}, {new:true});
+      });
+    User.findOneAndUpdate({username:user2}, { $push: {chatrooms : {[user1]: chatRoom.id}}}, {new:true})
+    .then(user => {   
+        chatRoom.save();
+      });    
+  }); */
 }
 
 router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {  
-  //console.log("req.params: " + req.params);  
-  
+  //console.log("req.params: " + req.params);    
   //like
   let user1 = req.body.user;
   //to be liked
   let user2 = req.body.data;
-
   let noti = io.of('noti');
-  noti.emit(user2, `${user1} like you`);
-  console.log(user2 + `\n${user1} like you`);
+  noti.emit(user1, `like ${user2}`);  
   const str = req.params.field;
-  if(req.body.connected){
-    //notify connected
-    /* noti.emit(user2, `${user1} connected`);
-    noti.emit(user1, `${user2} connected`); */
-    //create chat room        
+  if(req.body.connected){   
+    noti.emit(user2, `connected ${user1}`);    
+    noti.emit(user1, `connected ${user2}`);
     matchMake(user1, user2);
   }
-    /* let USER1 = User.findOne({username: user1});   
-    let str = `chatrooms.${user2}`;
-    USER1[str] = room._id; 
-    USER1.save();     */
-    //save chatroom id in each users`    
-  
   User.findOne({username: user2})  
   .then(user => {
     user[str] = user[str].concat(user1); 
@@ -228,11 +231,7 @@ router.post('/add/:field', cors.corsWithOptions, (req, res, next) => {
         res.setHeader('Content-Type', 'application/json');          
         res.json({err: err});
         return ;
-      }
-      /* if(req.body.connected){
-        
-
-      } */
+      }      
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.json(user[str]);      

@@ -80,7 +80,7 @@ var User = new Schema({
       type: Boolean,
       default: false
     },
-    like : {
+    connected : {
       type: Array,
       default: []
     },
