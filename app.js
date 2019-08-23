@@ -15,7 +15,7 @@ var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
 var uploadRouter = require('./routes/uploadRouter');
-var messageRouter = require('./routes/messageRouter');
+var notiRouter = require('./routes/notiRouter');
 const mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
@@ -64,7 +64,7 @@ app.use('/dishes',dishRouter);
 app.use('/promotions',promoRouter);
 app.use('/leaders',leaderRouter);
 app.use('/image',uploadRouter);
-app.use('/message',messageRouter);
+app.use('/noti',notiRouter);
 /* app.use(cookieParser('12345-67890-09876-54321')); */
 
 /* app.use(session({
