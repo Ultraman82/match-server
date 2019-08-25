@@ -39,6 +39,7 @@ verifyMail = email => {
     }
   });
 };
+
 /* var chat = io
   .of('/chat')
   .on('connection', function (socket) {    
@@ -57,6 +58,27 @@ verifyMail = email => {
   });
  */
 /* GET users listing. */
+
+pushNoti = (notiId, from, to, type) => {
+  let noti = io.of("noti");
+  Noti.findByIdAndUpdate(
+    notiId,
+    {
+      $push: {
+        comments: {
+          date: new Date().getTime(),
+          from: from,
+          type: type,
+          unread: true
+        }
+      }
+    },
+    { new: true }
+  ).then(result => {
+    noti.emit(to, `${type} ${from}`);
+  });
+};
+
 router.options("*", cors.corsWithOptions, (req, res) => {
   res.sendStatus(200);
 });
@@ -99,15 +121,15 @@ router.post("/lusers", cors.corsWithOptions, (req, res, next) => {
     username: { $in: req.body.checkedbyUsers }
   }); */
   User.find({
-    username: { $in: ["test1", "test2"] }
+    username: { $in: req.body.connected }
   }).then(user => {
     userList.connected = user;
     User.find({
-      username: { $in: ["test3", "test4"] }
+      username: { $in: req.body.likedby }
     }).then(user => {
       userList.likedby = user;
       User.find({
-        username: { $in: ["test5", "test6"] }
+        username: { $in: req.body.checkedby }
       }).then(user => {
         userList.checkedby = user;
         res.statusCode = 200;
@@ -143,7 +165,6 @@ router.post("/signup", cors.corsWithOptions, (req, res, next) => {
     req.body.password,
     (err, user) => {
       if (err) {
-        console.log("err at creating schema : " + err);
         //res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.json({ err: err, status: "dgd" });
@@ -209,7 +230,6 @@ router.get("/edit/:username", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.post("/edit", cors.corsWithOptions, (req, res, next) => {
-  console.log(JSON.stringify(req.body));
   User.findOneAndUpdate(
     { username: req.body.username },
     {
@@ -237,7 +257,7 @@ router.post("/edit", cors.corsWithOptions, (req, res, next) => {
 
 //chatroom register
 router.post("/chatroom", (req, res, next) => {
-  console.log("req.body: " + req.body);
+  console.log("/chatrooms req.body: " + req.body);
   const str = `chatRooms.${req.body.user2}`;
   User.findOneAndUpdate(
     { username: req.body.user1 },
@@ -263,21 +283,26 @@ const matchMake = (user1, user2) => {
   let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1 } });
   User.findOneAndUpdate(
     { username: user1 },
-    { $push: { comments: { [user2]: newMessage.id } } },
+    {
+      $push: { connected: user2 },
+      $set: { chatrooms: { [user2]: newMessage.id } }
+    },
     { new: true }
   ).then(user => {
-    //newMessage.update({$set:{ image: {[user1]:user.profile}}});
     newMessage.image[user1] = user.profile;
-    //newMessage.save();
+    pushNoti(user.noti, user2, user1, "connected");
   });
   User.findOneAndUpdate(
     { username: user2 },
-    { $push: { comments: { [user1]: newMessage.id } } },
+    {
+      $push: { connected: user1 },
+      $set: { chatrooms: { [user1]: newMessage.id } }
+    },
     { new: true }
   ).then(user => {
     newMessage.image[user2] = user.profile;
+    pushNoti(user.noti, user1, user2, "connected");
     newMessage.save();
-    console.log("newMessage.image : " + JSON.stringify(newMessage.image));
   });
   //console.log("newMessage.image : " + JSON.stringify(newMessage.image));
   /* Messages.create({users:{[user1]:user2, [user2]:user1}})
@@ -315,25 +340,19 @@ router.post("/add/blacklist", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
-  //console.log("req.params: " + req.params);
-  //like
   let user1 = req.body.user;
-  //to be liked
   let user2 = req.body.data;
-  let noti = io.of("noti");
   let image;
-  if (req.body.connected === "true") {
-    noti.emit(user2, `connected ${user1}`);
-    noti.emit(user1, `connected ${user2}`);
-    matchMake(user1, user2);
-  }
   User.findOneAndUpdate(
     { username: user1 },
     { $push: { like: user2 } },
     { new: true }
   ).then(user => {
+    //console.log("add/like user.likedby" + user.likedby);
+    if (user.likedby.indexOf(user2) !== -1) {
+      matchMake(user1, user2);
+    }
     image = user.profile;
-    console.log("User1.like : " + user.like);
   });
   User.findOneAndUpdate(
     { username: user2 },
@@ -341,52 +360,22 @@ router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
     { new: true }
   )
     .then(user => {
-      let obj = {
-        date: new Date().getTime(),
-        unread: true,
-        type: "like",
-        from: user1,
-        image: image
-      };
-      Noti.findByIdAndUpdate(
+      pushNoti(user.noti, user1, user2, "like");
+      /* Noti.findByIdAndUpdate(
         user.noti,
         { $push: { comments: obj } },
         { new: true }
       ).then(noti => {
         console.log("User2 noti : " + JSON.stringify(noti));
-      });
+      }); */
     })
     .then(user => {
-      noti.emit(user2, `like ${user1}`);
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
       res.json(user);
     })
     .catch(err => next(err));
 });
-
-/* router.post('/addback', cors.corsWithOptions, (req, res, next) => {  
-  let noti = io.of('noti');
-  noti.emit(req.body.data, `${req.body.user} like you`);
-  console.log(req.body.data + `\n${req.body.user} like you`);
-  const str = req.params.field;  
-  User.findOne({username: req.body.data})  
-  .then(user => {
-    user[str] = user[str].concat(req.body.user); 
-    user.save((err, user) => {
-      if (err) {          
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');          
-        res.json({err: err});
-        return ;
-      }
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.json(user[str]);      
-  })
-  })  
-  .catch((err) => next(err));
-})      */
 
 router.get("/user/:username", cors.corsWithOptions, (req, res, next) => {
   //console.log("req.params: " + req.params);

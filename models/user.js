@@ -81,7 +81,7 @@ var User = new Schema({
   },
   chatrooms: {
     type: Object,
-    default: null
+    default: {}
   },
   noti: {
     type: String,
@@ -93,6 +93,7 @@ var User = new Schema({
   },
   connected: {
     type: Array,
+    usePushEach: true,
     default: []
   },
   like: {
