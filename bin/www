@@ -42,9 +42,13 @@ secureServer.listen(app.get("secPort"), () => {
   console.log("Secure Server listening on port ", app.get("secPort"));
 });
 
-global.io = require("socket.io")(secureServer, { origins: "*:*" });
+var io = require("socket.io")(secureServer, { origins: "*:*" });
+//var chat = io.of("/chat").on("connection", function(socket) {});
+global.noti = io.of("/noti").on("connection", function(socket) {});
+global.chat = io.of("/chat").on("connection", function(socket) {});
+global.chatnoti = io.of("/chatnoti").on("connection", function(socket) {});
 
-app.set("socketio", io);
+//app.set("socketio", io);
 secureServer.on("error", onError);
 secureServer.on("listening", onListening);
 /**

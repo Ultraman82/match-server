@@ -60,7 +60,6 @@ verifyMail = email => {
 /* GET users listing. */
 
 pushNoti = (notiId, from, to, type) => {
-  let noti = io.of("noti");
   Noti.findByIdAndUpdate(
     notiId,
     {

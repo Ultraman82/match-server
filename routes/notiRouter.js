@@ -96,7 +96,6 @@ messageRouter
     }
   )
   .put(cors.corsWithOptions, (req, res, next) => {
-    console.log(req.body.date);
     Noti.findOneAndUpdate(
       { _id: req.params.notiId, "comments.date": req.body.date },
       { $set: { "comments.$.unread": false } },
