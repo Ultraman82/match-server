@@ -28,8 +28,8 @@ var notificationSchema = new Schema({
     unique: true
   },
   unread: {
-    type: Boolean,
-    required: true
+    type: Boolean,    
+    default: false
   },
   comments: {
     type: Array,

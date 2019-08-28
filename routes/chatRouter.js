@@ -31,26 +31,10 @@ chatRouter
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .post(cors.corsWithOptions, (req, res, next) => {
-    Chat.find({
-      _id: { $in: req.body.chatIds }
-    }).then(chat => {
-      let result = {};
-      console.log(JSON.stringify(chat));
-      chat.map(items => {
-        result[items._id] = items.comments.filter(
-          item => item.unread === true && item.from !== req.body.user
-        ).length;
-      });
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "application/json");
-      res.json(result);
-    });
-  }) //unread to read
-  .put(cors.corsWithOptions, (req, res, next) => {
-    console.log(req.body.date);
-    Noti.findOneAndUpdate(
-      { _id: req.params.notiId, "comments.date": req.body.date },
+  .get(cors.corsWithOptions, (req, res, next) => {
+    console.log(req.query.chatId);
+    Chat.findOneAndUpdate(
+      { _id: req.query.chatId, "comments.unread": true },
       { $set: { "comments.$.unread": false } },
       { new: true, multi: true }
     )
@@ -66,7 +50,23 @@ chatRouter
         err => next(err)
       )
       .catch(err => next(err));
-  });
+  })
+  .post(cors.corsWithOptions, (req, res, next) => {
+    Chat.find({
+      _id: { $in: req.body.chatIds }
+    }).then(chat => {
+      let result = {};
+      console.log(JSON.stringify(chat));
+      chat.forEach(items => {
+        result[items._id] = items.comments.filter(
+          item => item.unread === true && item.to === req.body.username
+        ).length;
+      });
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.json(result);
+    });
+  }); //unread to read
 
 chatRouter
   .route("/:chatId")

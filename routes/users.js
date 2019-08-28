@@ -171,7 +171,7 @@ router.post("/signup", cors.corsWithOptions, (req, res, next) => {
         let newNoti = new Noti({ username: req.body.username });
         console.log("noti_id: " + newNoti._id);
         user.noti = newNoti._id;
-        newNoti.save();
+        //newNoti.save();
         /* if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.email) user.email = req.body.email; */
