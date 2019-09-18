@@ -81,12 +81,12 @@ var User = new Schema({
   },
   chatrooms: {
     type: Object,
-    default: {}    
+    default: {}
   },
   noti: {
     type: String,
     default: null
-  },  
+  },
   connected: {
     type: Array,
     usePushEach: true,
@@ -116,11 +116,19 @@ var User = new Schema({
     type: Date,
     default: Date.now
   },
+  dob: {
+    type: String,
+    default: "",
+  },
+  age: {
+    type: Number,
+    default: 0,
+  },
   is_login: {
     type: Boolean,
     default: true
   }
-}, {minimize: false});
+}, { minimize: false });
 
 User.plugin(passportLocalMongoose);
 

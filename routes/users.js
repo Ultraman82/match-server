@@ -31,7 +31,7 @@ verifyMail = email => {
     subject: "Sending Email using Node.js",
     html: `<form action='https://localhost:3443/users/verify/${email}' method='post'><input type='submit' value='Submit'></input></form>`
   };
-  transporter.sendMail(mailOptions, function(error, info) {
+  transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
     } else {
@@ -83,7 +83,7 @@ router.options("*", cors.corsWithOptions, (req, res) => {
 });
 //router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req,res,next) => {
 router.get("/", cors.corsWithOptions, (req, res, next) => {
-  User.find({})
+  User.find({ age: { $gt: parseInt(""), $lt: parseInt(35) } })
     .then(
       users => {
         res.statusCode = 200;
@@ -239,7 +239,8 @@ router.post("/edit", cors.corsWithOptions, (req, res, next) => {
       email: req.body.email,
       gps: req.body.gps.split(","),
       biography: req.body.biography,
-      tags: req.body.tags
+      tags: req.body.tags,
+      dob: req.body.dob
     },
     { new: true }
   )
@@ -269,7 +270,6 @@ router.post("/chatroom", (req, res, next) => {
     .then(
       user => {
         res.statusCode = 200;
-        4;
         res.setHeader("Content-Type", "application/json");
         res.json(user);
       },

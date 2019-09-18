@@ -31,26 +31,54 @@ chatRouter
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
+  /*   .get(cors.corsWithOptions, (req, res, next) => {
+      console.log(req.query.chatId);
+      Chat.findOneAndUpdate(
+        { _id: req.query.chatId, "comments.unread": true },
+        { $set: { "comments.$.unread": false } },
+        { new: true, multi: true }
+      )
+        .then(
+          message => {
+            console.log("message : " + message);
+            //message.comments[parseInt(req.body.index)].unread = false;
+            //message.save();
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json(message);
+          },
+          err => next(err)
+        )
+        .catch(err => next(err));
+    }) */
+  // mark unread to false
   .get(cors.corsWithOptions, (req, res, next) => {
     console.log(req.query.chatId);
-    Chat.findOneAndUpdate(
-      { _id: req.query.chatId, "comments.unread": true },
-      { $set: { "comments.$.unread": false } },
-      { new: true, multi: true }
-    )
+    Chat.findById(req.query.chatId)
       .then(
-        message => {
-          console.log("message : " + message);
-          //message.comments[parseInt(req.body.index)].unread = false;
-          //message.save();
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json(message);
+        chats => {
+          chats.comments = chats.comments.map(comment => {
+            if (comment.unread)
+              comment.unread = false;
+            return comment;
+          });
+          chats.markModified("comments");
+          chats.save((err, messages) => {
+            if (err) {
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.json({ err: err });
+            }
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json(messages);
+          });
         },
         err => next(err)
       )
       .catch(err => next(err));
   })
+  //fetch Unread chat
   .post(cors.corsWithOptions, (req, res, next) => {
     Chat.find({
       _id: { $in: req.body.chatIds }
