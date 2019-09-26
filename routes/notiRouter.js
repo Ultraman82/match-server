@@ -77,7 +77,7 @@ messageRouter
       //.populate('comments.author')
       .then(
         message => {
-          console.log(message);
+          message.comments = message.comments.sort((a, b) => (a.date < b.date) ? 1 : -1);
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json(message);

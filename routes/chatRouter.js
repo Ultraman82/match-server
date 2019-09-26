@@ -7,6 +7,7 @@ const chatRouter = express.Router();
 
 chatRouter.use(bodyParser.json());
 
+
 pushChat = (chatId, from, message) => {
   Chat.findByIdAndUpdate(
     chatId,
@@ -28,9 +29,9 @@ pushChat = (chatId, from, message) => {
 
 chatRouter
   .route("/unread")
-  .options(cors.corsWithOptions, (req, res) => {
+  /* .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
-  })
+  }) */
   /*   .get(cors.corsWithOptions, (req, res, next) => {
       console.log(req.query.chatId);
       Chat.findOneAndUpdate(
@@ -52,8 +53,7 @@ chatRouter
         .catch(err => next(err));
     }) */
   // mark unread to false
-  .get(cors.corsWithOptions, (req, res, next) => {
-    console.log(req.query.chatId);
+  .get(cors.corsWithOptions, (req, res, next) => {    
     Chat.findById(req.query.chatId)
       .then(
         chats => {
@@ -83,8 +83,7 @@ chatRouter
     Chat.find({
       _id: { $in: req.body.chatIds }
     }).then(chat => {
-      let result = {};
-      console.log(JSON.stringify(chat));
+      let result = {};      
       chat.forEach(items => {
         result[items._id] = items.comments.filter(
           item => item.unread === true && item.to === req.body.username
@@ -101,7 +100,7 @@ chatRouter
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.cors, (req, res, next) => {
+  .get(cors.cors, (req, res, next) => {    
     Chat.findById(req.params.chatId)
       .then(
         messages => {
@@ -115,8 +114,7 @@ chatRouter
   })
   .put(cors.corsWithOptions, (req, res, next) => {
     let date = new Date().getTime();
-    console.log("check 1 connected", Object.keys(chat.connected));
-    // To chat Room
+        // To chat Room
     chat.emit(req.params.chatId, `${req.body.to},${date},${req.body.message}`);
     // To Header notice
     chatnoti.emit(
@@ -192,4 +190,5 @@ chatRouter
       .catch(err => next(err));
   }) */
 
+  
 module.exports = chatRouter;

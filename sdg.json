@@ -1,0 +1,182 @@
+{
+  "local": {
+    "_key": "passport",
+    "_strategies": {
+      "session": { "name": "session" },
+      "local": {
+        "_usernameField": "username",
+        "_passwordField": "password",
+        "name": "local"
+      },
+      "jwt": { "name": "jwt", "_verifOpts": { "ignoreExpiration": false } },
+      "facebook-token": {
+        "name": "facebook-token",
+        "_oauth2": {
+          "_clientId": "869646549870360",
+          "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+          "_baseSite": "",
+          "_authorizeUrl": "https://www.facebook.com/v2.6/dialog/oauth",
+          "_accessTokenUrl": "https://graph.facebook.com/v2.6/oauth/access_token",
+          "_accessTokenName": "access_token",
+          "_authMethod": "Bearer",
+          "_customHeaders": {},
+          "_useAuthorizationHeaderForGET": false
+        },
+        "_scopeSeparator": " ",
+        "_key": "oauth2:www.facebook.com",
+        "_stateStore": {},
+        "_skipUserProfile": false,
+        "_accessTokenField": "access_token",
+        "_refreshTokenField": "refresh_token",
+        "_profileURL": "https://graph.facebook.com/v2.6/me",
+        "_profileFields": ["id", "displayName", "name", "emails"],
+        "_profileImage": {},
+        "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+        "_enableProof": true,
+        "_fbGraphVersion": "v2.6"
+      }
+    },
+    "_serializers": [null],
+    "_deserializers": [null],
+    "_infoTransformers": [],
+    "_framework": {},
+    "_userProperty": "user",
+    "_sm": { "_key": "passport" },
+    "strategies": {}
+  },
+  "jwtPassport": {
+    "_key": "passport",
+    "_strategies": {
+      "session": { "name": "session" },
+      "local": {
+        "_usernameField": "username",
+        "_passwordField": "password",
+        "name": "local"
+      },
+      "jwt": { "name": "jwt", "_verifOpts": { "ignoreExpiration": false } },
+      "facebook-token": {
+        "name": "facebook-token",
+        "_oauth2": {
+          "_clientId": "869646549870360",
+          "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+          "_baseSite": "",
+          "_authorizeUrl": "https://www.facebook.com/v2.6/dialog/oauth",
+          "_accessTokenUrl": "https://graph.facebook.com/v2.6/oauth/access_token",
+          "_accessTokenName": "access_token",
+          "_authMethod": "Bearer",
+          "_customHeaders": {},
+          "_useAuthorizationHeaderForGET": false
+        },
+        "_scopeSeparator": " ",
+        "_key": "oauth2:www.facebook.com",
+        "_stateStore": {},
+        "_skipUserProfile": false,
+        "_accessTokenField": "access_token",
+        "_refreshTokenField": "refresh_token",
+        "_profileURL": "https://graph.facebook.com/v2.6/me",
+        "_profileFields": ["id", "displayName", "name", "emails"],
+        "_profileImage": {},
+        "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+        "_enableProof": true,
+        "_fbGraphVersion": "v2.6"
+      }
+    },
+    "_serializers": [null],
+    "_deserializers": [null],
+    "_infoTransformers": [],
+    "_framework": {},
+    "_userProperty": "user",
+    "_sm": { "_key": "passport" },
+    "strategies": {}
+  },
+  "adminPassport": {
+    "_key": "passport",
+    "_strategies": {
+      "session": { "name": "session" },
+      "local": {
+        "_usernameField": "username",
+        "_passwordField": "password",
+        "name": "local"
+      },
+      "jwt": { "name": "jwt", "_verifOpts": { "ignoreExpiration": false } },
+      "facebook-token": {
+        "name": "facebook-token",
+        "_oauth2": {
+          "_clientId": "869646549870360",
+          "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+          "_baseSite": "",
+          "_authorizeUrl": "https://www.facebook.com/v2.6/dialog/oauth",
+          "_accessTokenUrl": "https://graph.facebook.com/v2.6/oauth/access_token",
+          "_accessTokenName": "access_token",
+          "_authMethod": "Bearer",
+          "_customHeaders": {},
+          "_useAuthorizationHeaderForGET": false
+        },
+        "_scopeSeparator": " ",
+        "_key": "oauth2:www.facebook.com",
+        "_stateStore": {},
+        "_skipUserProfile": false,
+        "_accessTokenField": "access_token",
+        "_refreshTokenField": "refresh_token",
+        "_profileURL": "https://graph.facebook.com/v2.6/me",
+        "_profileFields": ["id", "displayName", "name", "emails"],
+        "_profileImage": {},
+        "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+        "_enableProof": true,
+        "_fbGraphVersion": "v2.6"
+      }
+    },
+    "_serializers": [null],
+    "_deserializers": [null],
+    "_infoTransformers": [],
+    "_framework": {},
+    "_userProperty": "user",
+    "_sm": { "_key": "passport" },
+    "strategies": {}
+  },
+  "facebookPassport": {
+    "_key": "passport",
+    "_strategies": {
+      "session": { "name": "session" },
+      "local": {
+        "_usernameField": "username",
+        "_passwordField": "password",
+        "name": "local"
+      },
+      "jwt": { "name": "jwt", "_verifOpts": { "ignoreExpiration": false } },
+      "facebook-token": {
+        "name": "facebook-token",
+        "_oauth2": {
+          "_clientId": "869646549870360",
+          "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+          "_baseSite": "",
+          "_authorizeUrl": "https://www.facebook.com/v2.6/dialog/oauth",
+          "_accessTokenUrl": "https://graph.facebook.com/v2.6/oauth/access_token",
+          "_accessTokenName": "access_token",
+          "_authMethod": "Bearer",
+          "_customHeaders": {},
+          "_useAuthorizationHeaderForGET": false
+        },
+        "_scopeSeparator": " ",
+        "_key": "oauth2:www.facebook.com",
+        "_stateStore": {},
+        "_skipUserProfile": false,
+        "_accessTokenField": "access_token",
+        "_refreshTokenField": "refresh_token",
+        "_profileURL": "https://graph.facebook.com/v2.6/me",
+        "_profileFields": ["id", "displayName", "name", "emails"],
+        "_profileImage": {},
+        "_clientSecret": "3796eb8882371137d80ccd00ac833c51",
+        "_enableProof": true,
+        "_fbGraphVersion": "v2.6"
+      }
+    },
+    "_serializers": [null],
+    "_deserializers": [null],
+    "_infoTransformers": [],
+    "_framework": {},
+    "_userProperty": "user",
+    "_sm": { "_key": "passport" },
+    "strategies": {}
+  }
+}

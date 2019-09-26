@@ -72,6 +72,7 @@ app.use("/leaders", leaderRouter);
 app.use("/image", uploadRouter);
 app.use("/noti", notiRouter);
 app.use("/chat", chatRouter);
+
 /* app.use(cookieParser('12345-67890-09876-54321')); */
 
 /* app.use(session({

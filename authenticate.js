@@ -26,9 +26,13 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
         console.log("JWT payload: ", jwt_payload);
         User.findOne({_id: jwt_payload._id}, (err, user) => {
             if (err) {
+                console.log("wrong");
                 return done(err, false);
             }
             else if (user) {
+                /* console.log("user from passport" + JSON.stringify(user));                
+                user.is_login = true;
+                user.save(); */
                 return done(null, user);
             }
             else {
@@ -45,6 +49,9 @@ exports.adminPassport = passport.use(new JwtStrategy(opts,
                 return done(err, false);
             }
             else if (user && user.admin) {
+                
+                /* user.login = true,
+                user.save(); */
                 return done(null, user);
             }
             else {

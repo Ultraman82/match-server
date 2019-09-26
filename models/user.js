@@ -2,18 +2,19 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require("passport-local-mongoose");
 
-var User = new Schema({
-  username: {
-    type: String,
-    unique: true,
-    required: true
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true
-  },
-  /* username: {
+var User = new Schema(
+  {
+    username: {
+      type: String,
+      unique: true,
+      required: true
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: true
+    },
+    /* username: {
     type: String,
     validate: {
       validator: function(v, cb) {
@@ -24,111 +25,112 @@ var User = new Schema({
       message: "User already exists!"
     }
   }, */
-  firstname: {
-    type: String,
-    required: true
-  },
-  lastname: {
-    type: String,
-    required: true
-  },
-  admin: {
-    type: Boolean,
-    default: false
-  },
-  gender: {
-    type: String,
-    default: ""
-  },
-  prefer: {
-    type: String,
-    default: ""
-  },
-  verified: {
-    type: Boolean,
-    default: false
-  },
-  tags: {
-    type: Object,
-    default: {
-      tag1: false,
-      tag2: false,
-      tag3: false,
-      tag4: false,
-      tag5: false,
-      tag6: false,
-      tag7: false,
-      tag8: false,
-      tag9: false,
-      tag10: false
+    firstname: {
+      type: String,
+      required: true
+    },
+    lastname: {
+      type: String,
+      required: true
+    },
+    admin: {
+      type: Boolean,
+      default: false
+    },
+    gender: {
+      type: String,
+      default: ""
+    },
+    prefer: {
+      type: String,
+      default: ""
+    },
+    verified: {
+      type: Boolean,
+      default: false
+    },
+    tags: {
+      type: Object,
+      default: {
+        tag1: false,
+        tag2: false,
+        tag3: false,
+        tag4: false,
+        tag5: false,
+        tag6: false,
+        tag7: false,
+        tag8: false,
+        tag9: false,
+        tag10: false
+      }
+    },
+    biography: {
+      type: String,
+      default: ""
+    },
+    gps: {
+      type: Object,
+      default: {}
+    },
+    gallery: {
+      type: Array,
+      default: []
+    },
+    profile: {
+      type: String,
+      default: null
+    },
+    chatrooms: {
+      type: Object,
+      default: {}
+    },
+    noti: {
+      type: String,
+      default: null
+    },
+    connected: {
+      type: Array,
+      usePushEach: true,
+      default: []
+    },
+    like: {
+      type: Array,
+      default: []
+    },
+    likedby: {
+      type: Array,
+      default: []
+    },
+    checkedby: {
+      type: Array,
+      default: []
+    },
+    blacklist: {
+      type: Array,
+      default: []
+    },
+    fame: {
+      type: Number,
+      default: 0
+    },
+    last_login: {
+      type: Date
+    },
+    dob: {
+      type: String,
+      default: ""
+    },
+    age: {
+      type: Number,
+      default: 0
+    },
+    is_login: {
+      type: Boolean,
+      default: true
     }
   },
-  biography: {
-    type: String,
-    default: ""
-  },
-  gps: {
-    type: Array,
-    default: []
-  },
-  gallery: {
-    type: Array,
-    default: []
-  },
-  profile: {
-    type: String,
-    default: null
-  },
-  chatrooms: {
-    type: Object,
-    default: {}
-  },
-  noti: {
-    type: String,
-    default: null
-  },
-  connected: {
-    type: Array,
-    usePushEach: true,
-    default: []
-  },
-  like: {
-    type: Array,
-    default: []
-  },
-  likedby: {
-    type: Array,
-    default: []
-  },
-  checkedby: {
-    type: Array,
-    default: []
-  },
-  blacklist: {
-    type: Array,
-    default: []
-  },
-  fame: {
-    type: Number,
-    default: 0
-  },
-  last_login: {
-    type: Date,
-    default: Date.now
-  },
-  dob: {
-    type: String,
-    default: "",
-  },
-  age: {
-    type: Number,
-    default: 0,
-  },
-  is_login: {
-    type: Boolean,
-    default: true
-  }
-}, { minimize: false });
+  { minimize: false }
+);
 
 User.plugin(passportLocalMongoose);
 

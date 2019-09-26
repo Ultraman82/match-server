@@ -16,11 +16,9 @@ require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: {
-    user: "exelcior99@gmail.com",
-    pass: "Wjdckdgus99@"
-    /* user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS */
+  auth: {    
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -31,7 +29,7 @@ verifyMail = email => {
     subject: "Sending Email using Node.js",
     html: `<form action='https://localhost:3443/users/verify/${email}' method='post'><input type='submit' value='Submit'></input></form>`
   };
-  transporter.sendMail(mailOptions, function (error, info) {
+  transporter.sendMail(mailOptions, function(error, info) {
     if (error) {
       console.log(error);
     } else {
@@ -39,25 +37,6 @@ verifyMail = email => {
     }
   });
 };
-
-/* var chat = io
-  .of('/chat')
-  .on('connection', function (socket) {    
-    socket.on('message', function(msg){
-      console.log(msg);
-      chat.emit(msg[0], [msg[1], msg[0], "response"]);
-    });
-    socket.emit('message', {
-        that: 'only'
-      , '/chat': 'will get'
-    });
-    chat.emit('message', {
-        everyone: 'in'
-      , '/chat': 'will get'
-    });
-  });
- */
-/* GET users listing. */
 
 pushNoti = (notiId, from, to, type) => {
   Noti.findByIdAndUpdate(
@@ -78,12 +57,35 @@ pushNoti = (notiId, from, to, type) => {
   });
 };
 
+getDistance = (lat1, lon1, lat2, lon2) => {
+  if (lat1 === lat2 && lon1 === lon2) {
+    return 0;
+  } else {
+    var radlat1 = (Math.PI * lat1) / 180;
+    var radlat2 = (Math.PI * lat2) / 180;
+    var theta = lon1 - lon2;
+    var radtheta = (Math.PI * theta) / 180;
+    var dist =
+      Math.sin(radlat1) * Math.sin(radlat2) +
+      Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+    if (dist > 1) {
+      dist = 1;
+    }
+    dist = Math.acos(dist);
+    dist = (dist * 180) / Math.PI;
+    dist = dist * 60 * 1.1515;
+    /* if (unit=="K") { dist = dist * 1.609344 }
+      if (unit=="N") { dist = dist * 0.8684 } */
+    return dist;
+  }
+};
+
 router.options("*", cors.corsWithOptions, (req, res) => {
   res.sendStatus(200);
 });
 //router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req,res,next) => {
 router.get("/", cors.corsWithOptions, (req, res, next) => {
-  User.find({ age: { $gt: parseInt(""), $lt: parseInt(35) } })
+  User.find()
     .then(
       users => {
         res.statusCode = 200;
@@ -95,15 +97,39 @@ router.get("/", cors.corsWithOptions, (req, res, next) => {
     .catch(err => next(err));
 });
 
-router.get("/filterd/:username", cors.corsWithOptions, (req, res, next) => {
-  /* var chat = io.of('/chat');      
-  chat.emit("test1", "test from log in"); */
-  User.find({ username: { $nin: req.body.blacklist } })
+router.post("/filtered", cors.corsWithOptions, (req, res, next) => {    
+  User.find({
+    $and: [
+      { age: { $gte: req.body.ageL, $lte: req.body.ageS } },
+      { fame: { $gte: req.body.fameL, $lte: req.body.fameS } }
+    ]
+  })
     .then(
       users => {
+        let tags = JSON.parse(req.body.tags);
+        let result = users.map(user => {
+          let comtags = 0;
+          tags.forEach(tag => {
+            comtags = comtags + user.tags[tag];
+          });          
+          let distance = getDistance(
+            req.body.gps.lat,
+            req.body.gps.lng,
+            user.gps.lat,
+            user.gps.lng
+          );          
+          if (comtags >= req.body.comtags &&
+            distance > req.body.distanceL &&
+            distance < req.body.distanceS) {                            
+              user._doc.distance = Math.round(distance);
+              user._doc.comtags = comtags;
+              return user;
+            }          
+        });   
+        result = result.sort((a, b) => (a._doc[req.body.sortby] > b._doc[req.body.sortby]) ? 1 : -1)        
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
-        res.json(users);
+        res.json(result);
       },
       err => next(err)
     )
@@ -237,7 +263,7 @@ router.post("/edit", cors.corsWithOptions, (req, res, next) => {
       gender: req.body.gender,
       prefer: req.body.prefer,
       email: req.body.email,
-      gps: req.body.gps.split(","),
+      gps: req.body.gps,
       biography: req.body.biography,
       tags: req.body.tags,
       dob: req.body.dob
@@ -279,7 +305,7 @@ router.post("/chatroom", (req, res, next) => {
 });
 
 const matchMake = (user1, user2) => {
-  let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1 } });
+  let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1, comments:[{date:1, message:"This is the first message"}] } });
   User.findOneAndUpdate(
     { username: user1 },
     {
@@ -340,8 +366,7 @@ router.post("/add/blacklist", cors.corsWithOptions, (req, res, next) => {
 
 router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
   let user1 = req.body.user;
-  let user2 = req.body.data;
-  let image;
+  let user2 = req.body.data;  
   User.findOneAndUpdate(
     { username: user1 },
     { $push: { like: user2 } },
@@ -376,6 +401,32 @@ router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
     .catch(err => next(err));
 });
 
+router.post("/add/profile", cors.corsWithOptions, (req, res, next) => {
+  let user1 = req.body.user;
+  let user2 = req.body.data;
+  User.findOneAndUpdate(
+    { username: user2,  checkedby: { $ne:user1}},
+    { $push: { checkedby: user1 } },
+    { new: true }
+  )
+    .then(user => {      
+      if(user) {
+        pushNoti(user.noti, user1, user2, "checked");
+        user.fame = Math.round(
+          (user.likedby.length / user.checkedby.length) * 100
+        );
+        user.save();
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(user);
+      } 
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.json({message:"Already checked profile before"});     
+    })
+    .catch(err => next(err));
+});
+
 router.get("/user/:username", cors.corsWithOptions, (req, res, next) => {
   //console.log("req.params: " + req.params);
   User.findOne({ username: req.params.username })
@@ -391,7 +442,7 @@ router.get("/user/:username", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.get("/:username/:field", cors.corsWithOptions, (req, res, next) => {
-  //console.log("req.params: " + req.params);
+  
   const str = `${req.params.field}`;
   User.findOne({ username: req.params.username })
     .then(
@@ -406,6 +457,7 @@ router.get("/:username/:field", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.post("/login", cors.corsWithOptions, (req, res, next) => {
+  
   passport.authenticate("local", (err, user, info) => {
     if (err) return next(err);
     if (!user) {
@@ -423,7 +475,10 @@ router.post("/login", cors.corsWithOptions, (req, res, next) => {
           err: "Could not log in user!"
         });
       }
-      var token = authenticate.getToken({ _id: req.user._id });
+      var token = authenticate.getToken({ _id: req.user._id });      
+      User.findByIdAndUpdate(req.user._id, {$set : {is_login : true, last_login: new Date()}}, { new: true })
+      .then(user => console.log(user.last_login));
+      //console.log("authenticate " + JSON.stringify(authenticate));
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
       res.json({ success: true, status: "Login Successful!", token: token });
@@ -431,16 +486,13 @@ router.post("/login", cors.corsWithOptions, (req, res, next) => {
   })(req, res, next);
 });
 
-router.get("/logout", (req, res) => {
-  if (req.session) {
-    req.session.destroy();
-    res.clearCookie("session-id");
-    res.redirect("/");
-  } else {
-    var err = new Error("You are not logged in!");
-    err.status = 403;
-    next(err);
-  }
+router.get("/logout", cors.corsWithOptions, (req, res, next) => {
+  User.findOneAndUpdate({username:req.query.username}, {$set : {is_login:false}}, {new:true})
+  .then(user => {    
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json({ success: false, status: "Logout Successful!"});
+  }).catch(err => next(err));
 });
 
 router.get(
