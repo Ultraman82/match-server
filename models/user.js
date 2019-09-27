@@ -114,7 +114,8 @@ var User = new Schema(
       default: 0
     },
     last_login: {
-      type: Date
+      type: Date,
+      default: null
     },
     dob: {
       type: String,
@@ -126,7 +127,7 @@ var User = new Schema(
     },
     is_login: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   { minimize: false }

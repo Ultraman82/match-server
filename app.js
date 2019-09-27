@@ -2,7 +2,6 @@ var express = require("express");
 var path = require("path");
 //var favicon = require('serve-favicon');
 var logger = require("morgan");
-//var cookieParser = require('cookie-parser');
 var bodyParser = require("body-parser");
 var session = require("express-session");
 var FileStore = require("session-file-store")(session);
@@ -11,16 +10,12 @@ var config = require("./config");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-var dishRouter = require("./routes/dishRouter");
-var promoRouter = require("./routes/promoRouter");
-var leaderRouter = require("./routes/leaderRouter");
 var uploadRouter = require("./routes/uploadRouter");
 var notiRouter = require("./routes/notiRouter");
 var chatRouter = require("./routes/chatRouter");
 const mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 
-//const Dishes = require('./models/dishes');
 
 // Connection URL
 const url = config.mongoUrl;
@@ -39,8 +34,6 @@ connect.then(
 );
 
 var app = express();
-
-//server.listen(5000);
 
 app.all("*", (req, res, next) => {
   if (req.secure) {
@@ -66,9 +59,6 @@ app.use(passport.initialize());
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/dishes", dishRouter);
-app.use("/promotions", promoRouter);
-app.use("/leaders", leaderRouter);
 app.use("/image", uploadRouter);
 app.use("/noti", notiRouter);
 app.use("/chat", chatRouter);
