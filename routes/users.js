@@ -99,10 +99,10 @@ router.options("*", cors.corsWithOptions, (req, res) => {
 // });
 
 router.post("/filtered", cors.corsWithOptions, (req, res, next) => {    
-  console.log("ip" + req.ip);
+  //console.log("vodi " + JSON.stringify(req.body));
    User.findOne({username:"blacklist"}).then(
      list => {      
-      let blacklist = list.blacklist.concat(req.body.username)
+      let blacklist = list.blacklist.concat(req.body.username).concat(req.body.likelist);      
       console.log("blacklist " + blacklist);
       User.find({
         $and: [  
@@ -317,61 +317,84 @@ router.post("/chatroom", (req, res, next) => {
 });
 
 const matchMake = (user1, user2) => {
-  let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1, comments:[{date:1, message:"This is the first message"}] } });
+  let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1}, comments:[{date:new Date(), message:"This is the first message", unread:false}]});
   User.findOneAndUpdate(
     { username: user1 },
-    {
-      $push: { connected: user2 },
-      $set: { chatrooms: { [user2]: newMessage.id } }
+    { 
+      $push: { connected: user2},      
     },
     { new: true }
   ).then(user => {
-    newMessage.image[user1] = user.profile;
-    pushNoti(user.noti, user2, user1, "connected");
+    user.chatrooms[user2] =  newMessage.id;
+    newMessage.image[user2] = user.profile;    
+    pushNoti(user.noti, user2, user1, "connected");    
+    user.markModified("chatrooms");
+    user.save();
   });
   User.findOneAndUpdate(
     { username: user2 },
     {
-      $push: { connected: user1 },
-      $set: { chatrooms: { [user1]: newMessage.id } }
+      $push: { connected: user1 }
     },
     { new: true }
   ).then(user => {
-    newMessage.image[user2] = user.profile;
+    user.chatrooms[user1] =  newMessage.id;     
+    newMessage.image[user1] = user.profile;
     pushNoti(user.noti, user1, user2, "connected");
+    newMessage.markModified("image");
     newMessage.save();
+    user.markModified("chatrooms");
+    user.save();
   });
-  //console.log("newMessage.image : " + JSON.stringify(newMessage.image));
-  /* Messages.create({users:{[user1]:user2, [user2]:user1}})
-  .then(chatRoom => {
-    User.findOneAndUpdate({username:user1}, { $push: {chatrooms : {[user2]: chatRoom.id}}}, {new:true})
-    .then(user => {        
-      console.log("chatRoom" + chatRoom);
-        chatRoom.image[user1] = user.profile;        
-        chatRoom.image[user1] = "a";
-        console.log("image in the user: " + JSON.stringify(chatRoom.image));
-        chatRoom.save();
-        chatRoom.update({$set:{ image: {[user1]:user.profile}}}, {new:true});
-      });
-    User.findOneAndUpdate({username:user2}, { $push: {chatrooms : {[user1]: chatRoom.id}}}, {new:true})
-    .then(user => {   
-        chatRoom.save();
-      });    
-  }); */
+  /* const matchMake = (user1, user2) => {
+    let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1}, comments:[{date:1, message:"This is the first message"}]});
+    User.findOneAndUpdate(
+      { username: user1 },
+      { 
+        $push: { connected: user2},
+        $set: { chatrooms: { [user1]: newMessage.id } }
+      },
+      { new: true }
+    ).then(user => {
+      newMessage.image[user1] = user.profile;
+      pushNoti(user.noti, user2, user1, "connected");
+    });
+    User.findOneAndUpdate(
+      { username: user2 },
+      {
+        $push: { connected: user1 },
+        $set: { chatrooms: { [user1]: newMessage.id } }
+      },
+      { new: true }
+    ).then(user => {
+      newMessage.image[user2] = user.profile;
+      pushNoti(user.noti, user1, user2, "connected");
+      newMessage.save();
+    }); */  
 };
 router.get("/add/dislike", cors.corsWithOptions, (req, res, next) => {
+  let userId = req.query.user;
+  let dislike = req.query.dislike
+  console.log(JSON.stringify(req.query));
   User.findOneAndUpdate(
-    { username: req.query.user },
-    { $pull: { like: req.query.dislike, connected: req.query.dislike} },
+    { username: userId },
+    { $pull: { like: dislike, connected: dislike} },
+    { new: true});    
+  User.findOneAndUpdate(
+    { username: dislike },
+    { $pull: { likedby: userId, connected: userId} },
     { new: true }
   )
-    .then(user => {
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "application/json");
-      res.json(user);
-    })
-    .catch(err => next(err));
-});
+  .then(user => {
+    pushNoti(user.noti, userId, dislike, "dislike")
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json(user);
+  }).catch(err => next(err));
+})
+    
+    
+
 
 router.get("/add/blacklist", cors.corsWithOptions, (req, res, next) => {
   User.findOneAndUpdate(
@@ -391,6 +414,14 @@ router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
   let user1 = req.body.user;
   let user2 = req.body.data;  
   User.findOneAndUpdate(
+    { username: user2 },
+    { $push: { likedby: user1 } },
+    { new: true }
+  )
+    .then(user => {
+      pushNoti(user.noti, user1, user2, "like");     
+    })    
+  User.findOneAndUpdate(
     { username: user1 },
     { $push: { like: user2 } },
     { new: true }
@@ -399,27 +430,10 @@ router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
     if (user.likedby.indexOf(user2) !== -1) {
       matchMake(user1, user2);
     }
-    image = user.profile;
-  });
-  User.findOneAndUpdate(
-    { username: user2 },
-    { $push: { likedby: user1 } },
-    { new: true }
-  )
-    .then(user => {
-      pushNoti(user.noti, user1, user2, "like");
-      /* Noti.findByIdAndUpdate(
-        user.noti,
-        { $push: { comments: obj } },
-        { new: true }
-      ).then(noti => {
-        console.log("User2 noti : " + JSON.stringify(noti));
-      }); */
-    })
-    .then(user => {
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "application/json");
-      res.json(user);
+    image = user.profile;  
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json(user);
     })
     .catch(err => next(err));
 });

@@ -55,9 +55,11 @@ chatRouter
   // mark unread to false
   .get(cors.corsWithOptions, (req, res, next) => {    
     Chat.findById(req.query.chatId)
-      .then(
-        chats => {
+      .then(        
+        chats => {          
+          console.log(chats.comment);
           chats.comments = chats.comments.map(comment => {
+            
             if (comment.unread)
               comment.unread = false;
             return comment;
@@ -80,15 +82,18 @@ chatRouter
   })
   //fetch Unread chat
   .post(cors.corsWithOptions, (req, res, next) => {
+    // let ids = req.body.chatIds.split(',');
+    console.log(req.body.chatIds);
     Chat.find({
       _id: { $in: req.body.chatIds }
     }).then(chat => {
+      console.log(chat.length);
       let result = {};      
       chat.forEach(items => {
         result[items._id] = items.comments.filter(
           item => item.unread === true && item.to === req.body.username
         ).length;
-      });
+      });      
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
       res.json(result);
@@ -104,6 +109,7 @@ chatRouter
     Chat.findById(req.params.chatId)
       .then(
         messages => {
+          //console.log(messgaes);
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json(messages);
