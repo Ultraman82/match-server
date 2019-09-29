@@ -102,7 +102,7 @@ router.post("/filtered", cors.corsWithOptions, (req, res, next) => {
   //console.log("vodi " + JSON.stringify(req.body));
    User.findOne({username:"blacklist"}).then(
      list => {      
-      let blacklist = list.blacklist.concat(req.body.username).concat(req.body.likelist);      
+      let blacklist = list.blacklist.concat(req.body.username).concat(req.body.likelist);
       console.log("blacklist " + blacklist);
       User.find({
         $and: [  

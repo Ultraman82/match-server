@@ -58,8 +58,7 @@ chatRouter
       .then(        
         chats => {          
           console.log(chats.comment);
-          chats.comments = chats.comments.map(comment => {
-            
+          chats.comments = chats.comments.map(comment => {            
             if (comment.unread)
               comment.unread = false;
             return comment;
@@ -130,16 +129,18 @@ chatRouter
     Chat.findByIdAndUpdate(
       req.params.chatId,
       {
-        $push: {
-          comments: {
+        $push: {          
+          comments: { $each : [{
             date: date,
             from: req.body.from,
             message: req.body.message,
             to: req.body.to,
             unread: true
-          }
-        },
-        $set: { unread: req.body.to }
+          }],        
+          $position: 0
+        }
+      },
+        
       },
       { new: true }
     )
