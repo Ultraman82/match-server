@@ -100,44 +100,41 @@ router.options("*", cors.corsWithOptions, (req, res) => {
 
 router.post("/filtered", cors.corsWithOptions, (req, res, next) => {    
   //console.log("vodi " + JSON.stringify(req.body));
-   let { age, gps, fame, username, likelist, sortby} = req.body;   
+  /* const { age, distance, comtags, gps, fame } = req.body; */
    User.findOne({username:"blacklist"}).then(
      list => {      
-      let blacklist = list.blacklist.concat(username).concat(likelist);
+      let blacklist = list.blacklist.concat(req.body.username).concat(req.body.likelist);
       console.log("blacklist " + blacklist);
       User.find({
         $and: [  
           { username : {$nin : blacklist }},
-          { age: { $gte: age.value.min, $lte: age.value.max } },
-          { fame: { $gte: fame.value.min, $lte: fame.value.max } }
+          { age: { $gte: req.body.ageL, $lte: req.body.ageS } },
+          { fame: { $gte: req.body.fameL, $lte: req.body.fameS } }
         ]
       })
         .then(
           users => {        
-            //let tags = JSON.parse(req.body.tags);                    
-            let tags = ["tag1", "tag2", "tag3", "tag4"];
+            let tags = JSON.parse(req.body.tags);        
             let result = users.map(user => {
               let comtags = 0;
               tags.forEach(tag => {
                 comtags = comtags + user.tags[tag];
               });          
               let distance = getDistance(
-                gps.lat,
-                gps.lng,
+                req.body.gps.lat,
+                req.body.gps.lng,
                 user.gps.lat,
                 user.gps.lng
-              );       
-              console.log("comtags" + comtags + "/distance" + distance);   
-              if (comtags >= req.body.comtags.value.min &&
-                distance >= req.body.distance.value.min &&
-                distance <= req.body.distance.value.max) {                            
+              );          
+              if (comtags >= req.body.comtags &&
+                distance >= req.body.distanceL &&
+                distance <= req.body.distanceS) {                            
                   user._doc.distance = Math.round(distance);
                   user._doc.comtags = comtags;
                   return user;
                 }          
-            });                    
-            console.log(JSON.stringify(result));
-            result = result.sort((a, b) => (a._doc[sortby] > b._doc[sortby]) ? 1 : -1)        
+            });        
+            result = result.sort((a, b) => (a._doc[req.body.sortby] > b._doc[req.body.sortby]) ? 1 : -1)        
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.json(result);
