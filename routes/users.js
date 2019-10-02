@@ -99,12 +99,13 @@ router.options("*", cors.corsWithOptions, (req, res) => {
 // });
 
 router.post("/filtered", cors.corsWithOptions, (req, res, next) => {    
-  //console.log("vodi " + JSON.stringify(req.body));
-   let { age, gps, fame, username, likelist, sortby} = req.body;   
+  //console.log("bodi " + JSON.stringify(req.body));
+  console.log(JSON.stringify(req.body));
+   let { age, gps, fame, username, likelist, genre} = req.body;   
    User.findOne({username:"blacklist"}).then(
      list => {      
       let blacklist = list.blacklist.concat(username).concat(likelist);
-      console.log("blacklist " + blacklist);
+      //console.log("blacklist " + blacklist);
       User.find({
         $and: [  
           { username : {$nin : blacklist }},
@@ -113,10 +114,10 @@ router.post("/filtered", cors.corsWithOptions, (req, res, next) => {
         ]
       })
         .then(
-          users => {        
-            //let tags = JSON.parse(req.body.tags);                    
+          users => {
             let tags = ["tag1", "tag2", "tag3", "tag4"];
             let result = users.map(user => {
+              console.log(user.username);
               let comtags = 0;
               tags.forEach(tag => {
                 comtags = comtags + user.tags[tag];
@@ -126,18 +127,16 @@ router.post("/filtered", cors.corsWithOptions, (req, res, next) => {
                 gps.lng,
                 user.gps.lat,
                 user.gps.lng
-              );       
-              console.log("comtags" + comtags + "/distance" + distance);   
+              );                     
               if (comtags >= req.body.comtags.value.min &&
                 distance >= req.body.distance.value.min &&
                 distance <= req.body.distance.value.max) {                            
                   user._doc.distance = Math.round(distance);
                   user._doc.comtags = comtags;
                   return user;
-                }          
-            });                    
-            console.log(JSON.stringify(result));
-            result = result.sort((a, b) => (a._doc[sortby] > b._doc[sortby]) ? 1 : -1)        
+                }
+            });                                
+            result = result.sort((a, b) => (a._doc[genre] > b._doc[genre]) ? 1 : -1)        
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.json(result);
@@ -282,7 +281,7 @@ router.post("/edit", cors.corsWithOptions, (req, res, next) => {
       gps: req.body.gps,
       biography: req.body.biography,
       tags: req.body.tags,
-      dob: req.body.dob
+      age: req.body.age
     },
     { new: true }
   )
@@ -414,19 +413,22 @@ router.get("/add/blacklist", cors.corsWithOptions, (req, res, next) => {
     .catch(err => next(err));
 });
 
-router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
+router.post("/add/like", cors.corsWithOptions, (req, res, next) => {  
   let user1 = req.body.user;
   let user2 = req.body.data;  
+  console.log("user1 =" + user1 + "\nuser2=" + user2);
   User.findOneAndUpdate(
-    { username: user2 },
+    { username: user2 , likedby: { $ne:user1}},
     { $push: { likedby: user1 } },
     { new: true }
   )
     .then(user => {
-      pushNoti(user.noti, user1, user2, "like");     
+      if(user){
+        pushNoti(user.noti, user1, user2, "like");
+      }
     })    
   User.findOneAndUpdate(
-    { username: user1 },
+    { username: user1, like: {$ne:user2} },
     { $push: { like: user2 } },
     { new: true }
   ).then(user => {
@@ -443,6 +445,7 @@ router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.post("/add/profile", cors.corsWithOptions, (req, res, next) => {
+  console.log("profile check shoot " + JSON.stringify(req.body));
   let user1 = req.body.user;
   let user2 = req.body.data;
   User.findOneAndUpdate(
@@ -460,10 +463,11 @@ router.post("/add/profile", cors.corsWithOptions, (req, res, next) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json(user);
-      } 
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "application/json");
-      res.json({message:"Already checked profile before"});     
+      } else{
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({message:"Already checked profile before"});
+      }
     })
     .catch(err => next(err));
 });

@@ -111,7 +111,7 @@ var User = new Schema(
     },
     fame: {
       type: Number,
-      default: 0
+      default: 40
     },
     last_login: {
       type: Date,
