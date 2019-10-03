@@ -16,7 +16,7 @@ require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: {    
+  auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
@@ -39,21 +39,24 @@ verifyMail = email => {
 };
 
 pushNoti = (notiId, from, to, type) => {
-  Noti.findByIdAndUpdate(
-    notiId,
-    {
-      $push: {
-        comments: {
-          date: new Date().getTime(),
-          from: from,
-          type: type,
-          unread: true
+  User.findOne({ username: from }).then(user => {
+    Noti.findByIdAndUpdate(
+      notiId,
+      {
+        $push: {
+          comments: {
+            date: new Date().getTime(),
+            from: from,
+            type: type,
+            image: user.profile,
+            unread: true
+          }
         }
-      }
-    },
-    { new: true }
-  ).then(result => {
-    noti.emit(to, `${type} ${from}`);
+      },
+      { new: true }
+    ).then(result => {
+      noti.emit(to, `${type} ${from}`);
+    });
   });
 };
 
@@ -98,53 +101,58 @@ router.options("*", cors.corsWithOptions, (req, res) => {
 //     .catch(err => next(err));
 // });
 
-router.post("/filtered", cors.corsWithOptions, (req, res, next) => {    
-  //console.log("bodi " + JSON.stringify(req.body));
-  console.log(JSON.stringify(req.body));
-   let { age, gps, fame, username, likelist, genre} = req.body;   
-   User.findOne({username:"blacklist"}).then(
-     list => {      
+router.post("/filtered", cors.corsWithOptions, (req, res, next) => {
+  console.log("bodi " + JSON.stringify(req.body));
+  let { age, gps, fame, username, likelist, genre, prefer } = req.body;
+  if (prefer === "bi") prefer = ["male", "female"];
+  User.findOne({ username: "blacklist" })
+    .then(list => {
       let blacklist = list.blacklist.concat(username).concat(likelist);
       //console.log("blacklist " + blacklist);
       User.find({
-        $and: [  
-          { username : {$nin : blacklist }},
+        $and: [
+          { username: { $nin: blacklist } },
+          { gender: { $in: prefer } },
           { age: { $gte: age.value.min, $lte: age.value.max } },
           { fame: { $gte: fame.value.min, $lte: fame.value.max } }
         ]
-      })
-        .then(
-          users => {
-            let tags = ["tag1", "tag2", "tag3", "tag4"];
-            let result = users.map(user => {
-              console.log(user.username);
-              let comtags = 0;
-              tags.forEach(tag => {
-                comtags = comtags + user.tags[tag];
-              });          
-              let distance = getDistance(
-                gps.lat,
-                gps.lng,
-                user.gps.lat,
-                user.gps.lng
-              );                     
-              if (comtags >= req.body.comtags.value.min &&
-                distance >= req.body.distance.value.min &&
-                distance <= req.body.distance.value.max) {                            
-                  user._doc.distance = Math.round(distance);
-                  user._doc.comtags = comtags;
-                  return user;
-                }
-            });                                
-            result = result.sort((a, b) => (a._doc[genre] > b._doc[genre]) ? 1 : -1)        
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.json(result);
-          },
-          err => next(err)
-        )
-     }
-   ).catch(err => next(err));
+      }).then(
+        users => {
+          let tags = ["tag1", "tag2", "tag3", "tag4"];
+          let result = users.map(user => {
+            console.log(user.username);
+            let comtags = 0;
+            tags.forEach(tag => {
+              comtags = comtags + user.tags[tag];
+            });
+            let distance = getDistance(
+              gps.lat,
+              gps.lng,
+              user.gps.lat,
+              user.gps.lng
+            );
+            if (
+              comtags >= req.body.comtags.value.min &&
+              distance >= req.body.distance.value.min &&
+              distance <= req.body.distance.value.max
+            ) {
+              user._doc.distance = Math.round(distance);
+              user._doc.comtags = comtags;
+              return user;
+            }
+          });
+          result = result.sort((a, b) =>
+            a._doc[genre] > b._doc[genre] ? 1 : -1
+          );
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+
+          res.json(result);
+        },
+        err => next(err)
+      );
+    })
+    .catch(err => next(err));
 });
 
 router.post("/lusers", cors.corsWithOptions, (req, res, next) => {
@@ -171,11 +179,11 @@ router.post("/lusers", cors.corsWithOptions, (req, res, next) => {
         User.find({
           username: { $in: req.body.like }
         }).then(user => {
-        userList.like = user;
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(userList);
-      });
+          userList.like = user;
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(userList);
+        });
       });
     });
   });
@@ -210,27 +218,28 @@ router.post("/signup", cors.corsWithOptions, (req, res, next) => {
         res.setHeader("Content-Type", "application/json");
         res.json({ err: err, status: "dgd" });
       } else {
-        let newNoti = new Noti({ username: req.body.username }).save();
-        //console.log("noti_id: " + newNoti._id);
-        user.noti = newNoti._id;
+        new Noti({ username: req.body.username }).save((err, data) => {
+          user.noti = data._id;
+          user.save((err, user) => {
+            if (err) {
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.json({ err: err });
+              return;
+            }
+            passport.authenticate("local")(req, res, () => {
+              verifyMail(req.body.email, req.body.username);
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.json({ success: true, status: "Registration Successful!" });
+            });
+          });
+        });
+
         //newNoti.save();
         /* if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.email) user.email = req.body.email; */
-        user.save((err, user) => {
-          if (err) {        
-            res.statusCode = 500;
-            res.setHeader("Content-Type", "application/json");
-            res.json({ err: err });
-            return;
-          }
-          passport.authenticate("local")(req, res, () => {
-            verifyMail(req.body.email, req.body.username);
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.json({ success: true, status: "Registration Successful!" });
-          });
-        });
       }
     }
   );
@@ -320,17 +329,22 @@ router.post("/chatroom", (req, res, next) => {
 });
 
 const matchMake = (user1, user2) => {
-  let newMessage = new Messages({ users: { [user1]: user2, [user2]: user1}, comments:[{date:new Date(), message:"This is the first message", unread:false}]});
+  let newMessage = new Messages({
+    users: { [user1]: user2, [user2]: user1 },
+    comments: [
+      { date: new Date(), message: "This is the first message", unread: false }
+    ]
+  });
   User.findOneAndUpdate(
     { username: user1 },
-    { 
-      $push: { connected: user2},      
+    {
+      $push: { connected: user2 }
     },
     { new: true }
   ).then(user => {
-    user.chatrooms[user2] =  newMessage.id;
-    newMessage.image[user2] = user.profile;    
-    pushNoti(user.noti, user2, user1, "connected");    
+    user.chatrooms[user2] = newMessage.id;
+    newMessage.image[user2] = user.profile;
+    pushNoti(user.noti, user2, user1, "connected");
     user.markModified("chatrooms");
     user.save();
   });
@@ -341,7 +355,7 @@ const matchMake = (user1, user2) => {
     },
     { new: true }
   ).then(user => {
-    user.chatrooms[user1] =  newMessage.id;     
+    user.chatrooms[user1] = newMessage.id;
     newMessage.image[user1] = user.profile;
     pushNoti(user.noti, user1, user2, "connected");
     newMessage.markModified("image");
@@ -373,31 +387,31 @@ const matchMake = (user1, user2) => {
       newMessage.image[user2] = user.profile;
       pushNoti(user.noti, user1, user2, "connected");
       newMessage.save();
-    }); */  
+    }); */
 };
 router.get("/add/dislike", cors.corsWithOptions, (req, res, next) => {
   let userId = req.query.user;
-  let dislike = req.query.dislike
+  let dislike = req.query.dislike;
   console.log(JSON.stringify(req.query));
   User.findOneAndUpdate(
     { username: userId },
-    { $pull: { like: dislike, connected: dislike} },
-    { new: true});    
-  User.findOneAndUpdate(
-    { username: dislike },
-    { $pull: { likedby: userId, connected: userId} },
+    { $pull: { like: dislike, connected: dislike } },
     { new: true }
-  )
-  .then(user => {
-    pushNoti(user.noti, userId, dislike, "dislike")
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.json(user);
-  }).catch(err => next(err));
-})
-    
-    
-
+  ).then(() => {
+    User.findOneAndUpdate(
+      { username: dislike },
+      { $pull: { likedby: userId, connected: userId } },
+      { new: true }
+    )
+      .then(user => {
+        pushNoti(user.noti, userId, dislike, "dislike");
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(user);
+      })
+      .catch(err => next(err));
+  });
+});
 
 router.get("/add/blacklist", cors.corsWithOptions, (req, res, next) => {
   User.findOneAndUpdate(
@@ -413,48 +427,53 @@ router.get("/add/blacklist", cors.corsWithOptions, (req, res, next) => {
     .catch(err => next(err));
 });
 
-router.post("/add/like", cors.corsWithOptions, (req, res, next) => {  
+router.post("/add/like", cors.corsWithOptions, (req, res, next) => {
   let user1 = req.body.user;
-  let user2 = req.body.data;  
+  let user2 = req.body.data;
   console.log("user1 =" + user1 + "\nuser2=" + user2);
   User.findOneAndUpdate(
-    { username: user2 , likedby: { $ne:user1}},
+    { username: user2, likedby: { $ne: user1 } },
     { $push: { likedby: user1 } },
     { new: true }
-  )
-    .then(user => {
-      if(user){
-        pushNoti(user.noti, user1, user2, "like");
-      }
-    })    
-  User.findOneAndUpdate(
-    { username: user1, like: {$ne:user2} },
-    { $push: { like: user2 } },
-    { new: true }
   ).then(user => {
-    //console.log("add/like user.likedby" + user.likedby);
-    if (user.likedby.indexOf(user2) !== -1) {
-      matchMake(user1, user2);
+    console.log(JSON.stringify(user));
+    if (user) {
+      pushNoti(user.noti, user1, user2, "like");
+      User.findOneAndUpdate(
+        { username: user1, like: { $ne: user2 } },
+        { $push: { like: user2 } },
+        { new: true }
+      )
+        .then(user => {
+          //console.log("add/like user.likedby" + user.likedby);
+          if (user.likedby.indexOf(user2) !== -1) {
+            matchMake(user1, user2);
+          }
+          image = user.profile;
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(user);
+        })
+        .catch(err => next(err));
+    } else {
+      res.statusCode = 400;
+      res.setHeader("Content-Type", "application/json");
+      res.json({ message: "Already Liked" });
     }
-    image = user.profile;  
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.json(user);
-    })
-    .catch(err => next(err));
+  });
 });
 
 router.post("/add/profile", cors.corsWithOptions, (req, res, next) => {
-  console.log("profile check shoot " + JSON.stringify(req.body));
+  //console.log("profile check shoot " + JSON.stringify(req.body));
   let user1 = req.body.user;
   let user2 = req.body.data;
   User.findOneAndUpdate(
-    { username: user2,  checkedby: { $ne:user1}},
+    { username: user2, checkedby: { $ne: user1 } },
     { $push: { checkedby: user1 } },
     { new: true }
   )
-    .then(user => {      
-      if(user) {
+    .then(user => {
+      if (user) {
         pushNoti(user.noti, user1, user2, "checked");
         user.fame = Math.round(
           (user.likedby.length / user.checkedby.length) * 100
@@ -463,10 +482,10 @@ router.post("/add/profile", cors.corsWithOptions, (req, res, next) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json(user);
-      } else{
+      } else {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
-        res.json({message:"Already checked profile before"});
+        res.json({ message: "Already checked profile before" });
       }
     })
     .catch(err => next(err));
@@ -487,7 +506,6 @@ router.get("/user/:username", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.get("/:username/:field", cors.corsWithOptions, (req, res, next) => {
-  
   const str = `${req.params.field}`;
   User.findOne({ username: req.params.username })
     .then(
@@ -501,9 +519,9 @@ router.get("/:username/:field", cors.corsWithOptions, (req, res, next) => {
     .catch(err => next(err));
 });
 
-router.post("/login", cors.corsWithOptions, (req, res, next) => {  
+router.post("/login", cors.corsWithOptions, (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
-    if (err) return next(err);    
+    if (err) return next(err);
     if (!user) {
       res.statusCode = 401;
       res.setHeader("Content-Type", "application/json");
@@ -511,7 +529,11 @@ router.post("/login", cors.corsWithOptions, (req, res, next) => {
     } else if (!user.verified) {
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
-      res.json({ success: false, status: "Need Email Verification", err: {"message":"Need Verification"}});
+      res.json({
+        success: false,
+        status: "Need Email Verification",
+        err: { message: "Need Verification" }
+      });
     }
     req.logIn(user, err => {
       if (err) {
@@ -523,9 +545,12 @@ router.post("/login", cors.corsWithOptions, (req, res, next) => {
           err: "Could not log in user!"
         });
       }
-      var token = authenticate.getToken({ _id: req.user._id });      
-      User.findByIdAndUpdate(req.user._id, {$set : {is_login : true, last_login: new Date()}}, { new: true })
-      .then(user => console.log(user.last_login));
+      var token = authenticate.getToken({ _id: req.user._id });
+      User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { is_login: true, last_login: new Date() } },
+        { new: true }
+      ).then(user => console.log(user.last_login));
       //console.log("authenticate " + JSON.stringify(authenticate));
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
@@ -535,12 +560,17 @@ router.post("/login", cors.corsWithOptions, (req, res, next) => {
 });
 
 router.get("/logout", cors.corsWithOptions, (req, res, next) => {
-  User.findOneAndUpdate({username:req.query.username}, {$set : {is_login:false}}, {new:true})
-  .then(user => {    
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.json({ success: false, status: "Logout Successful!"});
-  }).catch(err => next(err));
+  User.findOneAndUpdate(
+    { username: req.query.username },
+    { $set: { is_login: false } },
+    { new: true }
+  )
+    .then(user => {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.json({ success: false, status: "Logout Successful!" });
+    })
+    .catch(err => next(err));
 });
 
 router.get(
