@@ -16,7 +16,6 @@ var chatRouter = require("./routes/chatRouter");
 const mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 
-
 // Connection URL
 const url = config.mongoUrl;
 const connect = mongoose.connect(url, {
@@ -35,7 +34,7 @@ connect.then(
 
 var app = express();
 
-app.all("*", (req, res, next) => {
+/* app.all("*", (req, res, next) => {
   if (req.secure) {
     return next();
   } else {
@@ -44,7 +43,7 @@ app.all("*", (req, res, next) => {
       "https://" + req.hostname + ":" + app.get("secPort") + req.url
     );
   }
-});
+}); */
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -75,7 +74,6 @@ app.use("/chat", chatRouter);
 
 /* function auth (req, res, next) {
     console.log(req.session);
-
   if(!req.user) {
       var err = new Error('You are not authenticated!');
       err.status = 403;
@@ -85,7 +83,6 @@ app.use("/chat", chatRouter);
     next();
   }
 }
-
 app.use(auth); */
 
 // catch 404 and forward to error handler

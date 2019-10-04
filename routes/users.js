@@ -101,6 +101,12 @@ router.options("*", cors.corsWithOptions, (req, res) => {
 //     .catch(err => next(err));
 // });
 
+router.post("/test", cors.corsWithOptions, (req, res, next) => {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "application/json");
+  res.json({ message: "test" });
+});
+
 router.post("/filtered", cors.corsWithOptions, (req, res, next) => {
   console.log("bodi " + JSON.stringify(req.body));
   let { age, gps, fame, username, likelist, genre, prefer } = req.body;
