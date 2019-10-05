@@ -7,7 +7,8 @@ const whitelist = [
   "http://localhost:3000",
   "https://localhost:3443",
   "localhost:3001",
-  "http://localhost:3001"
+  "http://localhost:3001",
+  "https://match-client.herokuapp.com"
 ];
 var corsOptionsDelegate = (req, callback) => {
   var corsOptions;
