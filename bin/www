@@ -7,6 +7,7 @@
 var app = require("../app");
 var debug = require("debug")("confusionserver:server");
 var http = require("http");
+var https = require("https");
 var fs = require("fs");
 
 /**
@@ -15,12 +16,12 @@ var fs = require("fs");
 
 var port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
-app.set("secPort", port + 443);
+//app.set("secPort", port + 443);
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+var server = https.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
