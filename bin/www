@@ -32,11 +32,11 @@ server.on("listening", onListening);
 
 var io = require("socket.io")(server, { origins: "*:*" });
 //var chat = io.of("/chat").on("connection", function(socket) {});
+app.set("socketio", io);
+
 global.noti = io.of("/noti").on("connection", function(socket) {});
 global.chat = io.of("/chat").on("connection", function(socket) {});
 global.chatnoti = io.of("/chatnoti").on("connection", function(socket) {});
-
-//app.set("socketio", io);
 
 /**
  * Normalize a port into a number, string, or false.

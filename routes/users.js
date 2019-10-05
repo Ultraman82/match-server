@@ -27,7 +27,7 @@ verifyMail = email => {
     from: "Match42@gmail.com",
     to: email,
     subject: "Sending Email using Node.js",
-    html: `<form action='https://localhost:3443/users/verify/${email}' method='post'><input type='submit' value='Submit'></input></form>`
+    html: `<form action='http://match-server.herokuapp.com/users/verify/${email}' method='post'><input type='submit' value='Submit'></input></form>`
   };
   transporter.sendMail(mailOptions, function(error, info) {
     if (error) {
