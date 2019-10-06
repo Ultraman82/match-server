@@ -13,6 +13,11 @@ var usersRouter = require("./routes/users");
 var uploadRouter = require("./routes/uploadRouter");
 var notiRouter = require("./routes/notiRouter");
 var chatRouter = require("./routes/chatRouter");
+var compression = require("compression");
+var helmet = require("helmet");
+
+// Create the Express application object
+
 const mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 
@@ -33,7 +38,8 @@ connect.then(
 );
 
 var app = express();
-
+app.use(compression());
+app.use(helmet());
 /* app.all("*", (req, res, next) => {
   if (req.secure) {
     return next();
