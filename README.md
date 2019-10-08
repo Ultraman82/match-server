@@ -1,7 +1,7 @@
 # Matcha
 
 [42 School](https://www.42.us/) project.<br/>
-This is the backend service of [42 Match](https://github.com/Ultraman82/match-server.git).
+This is the backend service of [42 Match](https://github.com/Ultraman82/match-client.git).
 Hosted by AWS/EC2
 
 ### Frameworks
