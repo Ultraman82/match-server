@@ -107,6 +107,10 @@ router.post("/test", cors.corsWithOptions, (req, res, next) => {
   res.json({ message: "test" });
 });
 
+//////////////////////////////////////////////////////////////////////////
+//                  For the Airbnb code snippet                        //
+/////////////////// /////////////////////////////////////////////////////
+
 router.post("/filtered", cors.corsWithOptions, (req, res, next) => {
   console.log("bodi " + JSON.stringify(req.body));
   let { age, gps, fame, username, likelist, genre, prefer } = req.body;
